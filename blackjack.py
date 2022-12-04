@@ -35,3 +35,35 @@ class Deck:
     def deal(self):
         single_card = self.deck.pop()
         return single_card
+
+class Hand:
+    def __init__(self):
+        self.cards = []  # start as an empty list with no cards
+        self.value = 0  # start with a zero value
+        self.aces = 0   # start with zero aces in hand
+
+    # A single card passed in from Deck.deal()
+    def add_card(self, card):
+        self.cards.append(card)
+        self.value += values[card.rank]
+
+        # Tracks aces
+        if card.rank = "Ace":
+            self.aces += 1
+    
+    # Tracks Aces 
+    def adjust_for_ace(self):
+        # If total value > 21 and Aces are in hand,
+        # then change Ace to be 1 instead of 11
+        while self.value > 21 and self.aces:
+            self.value -= 10
+            self.aces -= 1
+
+test_deck = Deck()
+test_deck.shuffle()
+test_player = Hand()
+pulled_card = test_deck.deal()
+print(pulled_card)
+test_player.add_card(pulled_card)
+test_player.add_card(test_deck.deal())
+print(test_player.value)
