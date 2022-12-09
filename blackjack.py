@@ -48,7 +48,7 @@ class Hand:
         self.value += values[card.rank]
 
         # Tracks aces
-        if card.rank = "Ace":
+        if card.rank == "Ace":
             self.aces += 1
     
     # Tracks Aces 
@@ -70,11 +70,74 @@ class Chips:
     def lose_bet(self):
         self.total -= self.bet
 
-test_deck = Deck()
-test_deck.shuffle()
-test_player = Hand()
-pulled_card = test_deck.deal()
-print(pulled_card)
-test_player.add_card(pulled_card)
-test_player.add_card(test_deck.deal())
-print(test_player.value)
+def take_bet(chips):
+    while True:
+        try:
+            chips.bet = int(input("How many chips would you like to bet? "))
+        except:
+            print("Sorry please provide an integer")
+        else:
+            if chips.bet > chips.total:
+                print("Sorry, you do not have enough chips! Your have: {}".format(chips.total))
+            else:
+                break
+
+def hit(deck, hand):
+    single_card = deck.deal()
+    hand.add_card(single_card)
+    hand.adjust_for_ace()
+
+def hit_or_stand(deck, hand):
+    while True:
+        x = input("Hit or Stand? Enter h or s")
+
+        if x[0].lower() == 'h':
+            hit(deck, hand)
+        elif x[0].lower() == 's':
+            print("Player Stands Dealer's Turn")
+            playing = False
+        else:
+            print("Sorry, I did not understand that, please enter h or s only")
+            continue
+        break
+
+def show_some(player, dealer):
+    # Show only one of the dealer's cards
+    print("\n Dealer's Hand: ")
+    print("First card hidden!")
+    print(dealer.cards[1])
+
+    # Show all (2 cards) of the player's hand/cards
+    print("\n Player's Hand: ")
+    for card in player.cards:
+        print(card)
+
+def show_all(player, dealer):
+    # Show all of the dealer's cards
+    print("\n Dealer's Hand: ",*dealer.cards,sep='\n')
+    # Calculate and display value
+    print(f"Value of dealer's hand is: {dealer.value}")
+
+    # Show all of the player's cards
+    print("\n Player's Hand: ",*player.cards,sep='\n')
+    # Calculate and display value
+    print(f"Value of player's hand is: {player.value}")
+
+def player_busts(player, dealer, chips):
+    print("BUST PLAYER!")
+    chips.lose_bet()
+
+def player_wins(player, dealer, chips):
+    print("PLAYER WINS!")
+    chips.win_bet()
+
+def dealer_busts(player, dealer, chips):
+    print("PLAYER WINS! DEALER BUSTED!")
+    chips.win_bet()
+
+def dealer_wins(player, dealer, chips):
+    print("DEALER WINS!")
+    chips.lose_bet()
+
+def push(player, dealer, chips):
+    print("Dealer and player tie! PUSH")
