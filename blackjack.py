@@ -58,6 +58,13 @@ class Hand:
         while self.value > 21 and self.aces:
             self.value -= 10
             self.aces -= 1
+    
+    def new_hand(self):
+        # resets to an empty list with no cards
+        while len(self.cards) > 0:
+            self.cards.pop()
+        self.value = 0  # resets to zero value
+        self.aces = 0   # resets to zero aces in hand
 
 class Chips:
     def __init__(self, total = 100):
@@ -73,6 +80,7 @@ class Chips:
 def take_bet(chips):
     while True:
         try:
+            print(f"You have {chips.total} chips")
             chips.bet = int(input("How many chips would you like to bet? "))
         except:
             print("Sorry please provide an integer")
@@ -120,7 +128,7 @@ def show_all(player, dealer):
     print(f"Value of dealer's hand is: {dealer.value}")
 
     # Show all of the player's cards
-    print("\n Player's Hand: ",*player.cards,sep='\n')
+    print("\nPlayer's Hand: ",*player.cards,sep='\n')
     # Calculate and display value
     print(f"Value of player's hand is: {player.value}")
 
@@ -143,71 +151,110 @@ def dealer_wins(player, dealer, chips):
 def push(player, dealer, chips):
     print("Dealer and player tie! PUSH")
 
-while True:
-    print("WELCOME TO BLACKJACK")
-
-    # Create & shuffle the deck, deal two cards to each player
-    deck = Deck()
+# Shuffle the deck and deals two cards to each player
+def deal_cards(deck, player,dealer):
+    # Shuffle deck
     deck.shuffle()
 
-    player_hand = Hand()
-    player_hand.add_card(deck.deal())
-    player_hand.add_card(deck.deal())
+    # Deals two cards to player
+    player.add_card(deck.deal())
+    player.add_card(deck.deal())
 
-    dealer_hand = Hand()
-    dealer_hand.add_card(deck.deal())
-    dealer_hand.add_card(deck.deal())
+    # Deals two cards to dealer
+    dealer.add_card(deck.deal())
+    dealer.add_card(deck.deal())
 
-    # Set up player's chips
-    player_chips = Chips()
+def round_finish(player, dealer, chips):
+    # Dealer busts
+    if dealer.value > 21:
+        dealer_busts(player,dealer,chips)
+    # Dealer's hands is greater than player's hand
+    elif dealer.value > player.value:
+        dealer_wins(player,dealer,chips)
+    # Player's hands is greater than dealer's hand
+    elif dealer.value < player.value:
+        player_wins(player,dealer,chips)
+    # Player and dealer tie, so no one wins or loses chips
+    else:
+        push(player,dealer,chips)
 
-    # Prompt player for their bet
-    take_bet(player_chips)
-
-    # Show cards (but keep one dealer card hidden)
-    show_some(player_hand,dealer_hand)
-
-    while playing:
-        # Player's turn
-        
+def player_turn(deck, player, dealer, chips):
+    while playing:     
         # Prompt for player to hit or stands
-        hit_or_stand(deck,player_hand)
+        hit_or_stand(deck,player)
 
         # Show cards (but keep one dealer card hidden)
-        show_some(player_hand,dealer_hand)
+        show_some(player,dealer)
 
         # Check if player's hand exceeds 21
         if player_hand.value > 21:
-            player_busts(player_hand,dealer_hand,player_chips)
+            player_busts(player,dealer,chips)
             break
 
-    # If player is still under 21, player dealer's hand until dealer reaches 17
-    if player_hand.value <= 21:
-
-        while dealer_hand.value < 17:
-            hit(deck,dealer_hand)
-
+def dealer_turn(deck, player, dealer, chips):
+    if player.value <= 21:
         # Show all cards
-        show_all(player_hand,dealer_hand)
+        show_all(player,dealer)
 
-        # Run different winning scenarios
-        if dealer_hand.value > 21:
-            dealer_busts(player_hand,dealer_hand,player_chips)
-        elif dealer_hand.value > player_hand.value:
-            dealer_wins(player_hand,dealer_hand,player_chips)
-        elif dealer_hand.value < player_hand.value:
-            player_wins(player_hand,dealer_hand,player_chips)
-        else:
-            push(player_hand,dealer_hand,player_chips)
+        # Dealer hits until 17 or higher
+        while dealer.value < 17:
+            print("\nDealer Hits!")
+            hit(deck,dealer)
+            show_all(player,dealer)
+
+        # Run different winning scenarios based on hand values
+        round_finish(player,dealer,chips)
+
+def play_round(deck, player, dealer, chips):
+    # Reset both player and dealer hands to before dealing new cards
+    player.new_hand()
+    dealer.new_hand()
+    
+    # Deal cards to player and dealer
+    deal_cards(deck,player,dealer)
+    
+    # Prompt player for their bet
+    take_bet(chips)
+
+    # Show cards (but keep one dealer card hidden)
+    show_some(player,dealer)
+
+    # Player's turn to hit or stand
+    player_turn(deck,player,dealer,chips)
+
+    # After player stands, it becomes the dealer's turn
+    dealer_turn(deck,player,dealer,chips)
 
     # Inform player of their chips total
-    print("\nPlayer total chips are at: {}".format(player_chips.total))
-    # Ask to play again
-    new_game = input("Would you like to play another hand? (y/n) ")
+    print("\nPlayer total chips are at: {}".format(chips.total))
 
-    if new_game[0].lower() == 'y':
-        playing = True
-        continue
-    else:
+print("WELCOME TO BLACKJACK")
+# Set up player's chips
+deck = Deck()
+player_chips = Chips()
+player_hand = Hand()
+dealer_hand = Hand()
+
+while playing:
+    # Begin Blackjack new round
+    play_round(deck, player_hand, dealer_hand, player_chips)
+
+    # Check if player still has chips
+    # If not, then end the games
+    if player_chips.total <= 0:
+        print("Sorry, you're all out of chips")
         print("Thanks for playing!")
+        break
+    
+    # If there are still chips, then ask to play again
+    while True:
+        new_game = input("Would you like to play another hand? (y/n) ")
+        if new_game[0].lower() == 'y':
+            playing = True
+        elif new_game[0].lower() == 'n':
+            playing = False
+            print("Thanks for playing!")
+        else:
+            print("Sorry, I did not understand that, please enter y or n only")
+            continue
         break
